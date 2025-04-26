@@ -1,77 +1,92 @@
+#include <SFML/Graphics/Sprite.hpp>
+#include <SFML/Graphics/Texture.hpp>
+#include <iostream>
+#include <opencv4/opencv2/imgcodecs.hpp>
+#include <opencv4/opencv2/imgproc.hpp>
+#include <SFML/Graphics.hpp>
+#include <string>
 #include <type_traits>
 #include <vector>
-#include <opencv4/opencv2/imgcodecs.hpp>   // cv::imread
-#include <opencv4/opencv2/imgproc.hpp>     // cv::cvtColor, cv::threshold, cv::connectedComponentsWithStats
-#include <SFML/Graphics.hpp>       // SFML Graphics (includes Window and System modules)
-
-#include <iostream>
-
-// Structure to hold connected component info
 struct Component {
+/* struct with cc info */
     int label;
-    cv::Rect bbox;
     int area;
-    // (Centroid or other properties can be added here in the future)
+    cv::Rect bbox;
 };
 
-int main(int argc, char** argv) {
-    // 1. Load the input image
-    std::string imagePath = "assets/scan.png";
-    if (argc > 1) {
-        imagePath = argv[1];
-    }
-    cv::Mat orig = cv::imread(imagePath);
-
+int main(int argc, char** argv){
+    
+    /* 1. 
+     * load image */
+    std::string imgpath = "assets/sketch-small.png";
+    if (argc > 1)
+        imgpath = argv[1];
+    cv::Mat orig = cv::imread(imgpath);
+    /*
     cv::resize(orig, orig, {}, 0.5, 0.5, cv::INTER_AREA);
+    */
     if (orig.empty()) {
-        std::cerr << "Error: Could not load image at " << imagePath << std::endl;
+        std::cerr << "Error: could not load image at " << imgpath << std::endl;
         return 1;
     }
 
-    // 2. Convert to grayscale and apply binary threshold (invert + Otsu)
+    /* 2.
+     * convert to grayscale and apply binary threshold (invert + otsu)
+     */
     cv::Mat gray;
     cv::cvtColor(orig, gray, cv::COLOR_BGR2GRAY);
     cv::Mat binary;
     cv::threshold(gray, binary, 0, 255, cv::THRESH_BINARY_INV | cv::THRESH_OTSU);
-    // After this, 'binary' is a single-channel image: pixels are 255 for original black lines, 0 for background&#8203;:contentReference[oaicite:13]{index=13}.
 
-    // 3. Find connected components and their stats
+    /* `binary` being a single channel image
+     */
+
+    /* 3.
+     * find connected components and stats
+     */
     cv::Mat labels, stats, centroids;
     int nComponents = cv::connectedComponentsWithStats(
-        binary, labels, stats, centroids, 8, CV_32S);
-    // nComponents includes the background as label 0&#8203;:contentReference[oaicite:14]{index=14}.
+            binary, labels, stats, centroids, 8, CV_32S);
 
-    // 4. Store components (skip label 0 which is background)
+    /* 4.
+     * store components (except 0 -> background)
+     */
     std::vector<Component> components;
     components.reserve(nComponents - 1);
-    for (int label = 1; label < nComponents; ++label) {
+    for (int label=1; label < nComponents; ++label){
         Component comp;
         comp.label = label;
-        // Retrieve bounding box and area from stats matrix (columns 0-4)&#8203;:contentReference[oaicite:15]{index=15}:
-        int left   = stats.at<int>(label, cv::CC_STAT_LEFT);
-        int top    = stats.at<int>(label, cv::CC_STAT_TOP);
-        int width  = stats.at<int>(label, cv::CC_STAT_WIDTH);
-        int height = stats.at<int>(label, cv::CC_STAT_HEIGHT);
-        comp.area  = stats.at<int>(label, cv::CC_STAT_AREA);
-        comp.bbox  = cv::Rect(left, top, width, height);
+
+        /* rounding box of the cc */
+        int left    = stats.at<int>(label, cv::CC_STAT_LEFT);
+        int top     = stats.at<int>(label, cv::CC_STAT_TOP);
+        int width   = stats.at<int>(label, cv::CC_STAT_WIDTH);
+        int height  = stats.at<int>(label, cv::CC_STAT_HEIGHT);
+        comp.area   = stats.at<int>(label, cv::CC_STAT_AREA);
+        comp.bbox   = cv::Rect(left, top, width, height);
         components.push_back(comp);
     }
-    std::cout << "Found " << components.size() << " connected components (excluding background).\n";
+    std::cout << "Found " << components.size() << " connected components " 
+        << "(excluding background)\n";
 
-    // 5. Set up SFML window and display the binary image
-    // Convert binary Mat to RGBA pixel array for SFML
+    /* 5.
+     * setup SFML window and display binary image
+     * need to convert that bin to RGBA pixel array */
     cv::Mat rgba;
-    cv::cvtColor(binary, rgba, cv::COLOR_GRAY2RGBA);  // result has 4 channels (R,G,B,A)
-    // Create SFML texture and update it with pixel data
+    cv::cvtColor(binary, rgba, cv::COLOR_GRAY2RGBA);
+    /* create SFML texture and update with pixel data
+     */
     sf::Texture texture;
-    if(!texture.resize({std::make_unsigned_t<int>(rgba.cols), 
-            std::make_unsigned_t<int>(rgba.rows)}))
-        std::cerr << "Unable to resize to" << rgba.cols << ", " << rgba.rows <<'\n';
-    texture.update(rgba.ptr());  // update texture with RGBA pixels&#8203;:contentReference[oaicite:16]{index=16}
+    if(!texture.resize({
+                std::make_unsigned_t<int>(rgba.cols),
+                std::make_unsigned_t<int>(rgba.rows)}))
+        std::cerr << "Unable to resize to " << rgba.cols << ", " << rgba.rows
+            << '\n';
+    texture.update(rgba.ptr()); 
 
-    // Create a sprite to draw the texture
+    /* use sprite to draw */
     sf::Sprite sprite(texture);
-    // Open an SFML window to display the image
+    /* SFML window to display */
     sf::RenderWindow window(sf::VideoMode({std::make_unsigned_t<int>(rgba.cols), 
                 std::make_unsigned_t<int>(rgba.rows)}), "Binarized Image");
     while (window.isOpen()) {
