@@ -3,6 +3,7 @@ set(CMAKE_CXX_COMPILER clang++)
 project(CMakeSFMLOpenCVProject LANGUAGES CXX)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+add_compile_options(-Wall -Wextra)
 
 include(FetchContent)
 
@@ -36,3 +37,4 @@ target_link_libraries(main
     opencv_core 
     opencv_imgcodecs ${OpenCV_LIBS})
 # target_include_directories(SFML_OpenCV_Demo PRIVATE ${OpenCV_INCLUDE_DIRS})
+
