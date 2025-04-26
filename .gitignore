@@ -1,2 +1,5 @@
-opencvsample
 build
+opencvsample/CMakeFiles
+opencvsample/CMakeCache.txt
+opencvsample/Makefile.old
+opencvsample/cmake_install.cmake
