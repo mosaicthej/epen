@@ -3,3 +3,8 @@ opencvsample/CMakeFiles
 opencvsample/CMakeCache.txt
 opencvsample/Makefile.old
 opencvsample/cmake_install.cmake
+cvccsample/CMakeFiles
+cvccsample/bin
+cvccsample/CMakeCache.txt
+cvccsample/Makefile
+cvccsample/cmake_install.cmake
