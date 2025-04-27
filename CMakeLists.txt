@@ -1,11 +1,16 @@
 cmake_minimum_required(VERSION 3.28)
 set(CMAKE_CXX_COMPILER clang++)
-project(CMakeSFMLOpenCVProject LANGUAGES CXX)
+project(InkAnimation LANGUAGES CXX)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 add_compile_options(-Wall -Wextra -g)
 
 include(FetchContent)
+
+option(ENABLE_DEBUG "Enable debug output" OFF)
 
 # Fetch SFML
 FetchContent_Declare(SFML
@@ -16,25 +21,34 @@ FetchContent_Declare(SFML
     SYSTEM)
 FetchContent_MakeAvailable(SFML)
 
-# Find OpenCV
-set(OpenCV_DIR "/usr/lib64/cmake/opencv4") # or wherever your OpenCV 4's CMake files are located
+# Find OpenCV (ensure your OpenCV path is correctly set)
+set(OpenCV_DIR "/usr/lib64/cmake/opencv4") # Adjust this path if needed
 find_package(OpenCV REQUIRED)
 
-# Executable
-add_executable(main src/main.cpp)
+# Define executable sources explicitly
+set(SOURCES
+    src/main.cpp
+    src/ImageProcessor.cpp
+    src/InkAnimator.cpp
+)
 
-# Compiler flags
-target_compile_features(main PRIVATE cxx_std_17)
+add_executable(InkAnimation ${SOURCES})
+if(ENABLE_DEBUG)
+    target_compile_definitions(InkAnimation PRIVATE DEBUG)
+endif()
 
-# Link SFML and OpenCV
-# target_link_libraries(main PRIVATE SFML::Graphics ${OpenCV_LIBS})
-target_include_directories(main PRIVATE ${OpenCV_INCLUDE_DIRS})
 
-target_link_libraries(main 
-    PRIVATE sfml-graphics 
-    sfml-window 
-    sfml-system 
-    opencv_core 
-    opencv_imgcodecs ${OpenCV_LIBS})
-# target_include_directories(SFML_OpenCV_Demo PRIVATE ${OpenCV_INCLUDE_DIRS})
+# Include directories
+target_include_directories(InkAnimation PRIVATE
+    src
+    ${OpenCV_INCLUDE_DIRS}
+)
+
+# Link SFML and OpenCV correctly
+target_link_libraries(InkAnimation PRIVATE
+    sfml-graphics
+    sfml-window
+    sfml-system
+    ${OpenCV_LIBS}
+)
 
