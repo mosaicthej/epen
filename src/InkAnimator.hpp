@@ -4,17 +4,21 @@
 #include "ImageProcessor.hpp"
 #include <queue>
 #include <set>
+#include <type_traits>
 
-#define CLOSE_SF_WIND(w) {\
-    while(const std::optional e = w.pollEvent()) \
-        if (e->is<sf::Event::Closed>() || \
-                (e->is<sf::Event::KeyPressed>() && \
-                 (e->getIf<sf::Event::KeyPressed>() \
-                 -> code==sf::Keyboard::Key::Escape || \
-                 e->getIf<sf::Event::KeyPressed>() \
-                 -> code==sf::Keyboard::Key::Q ))) \
-            w.close()\
-    }
+#define CLOSE_SF_WIND_ON_CUE(w) \
+    do{ \
+        while(const std::optional event = window_.pollEvent())      \
+            if (event->is<sf::Event::Closed>() ||                   \
+                    (event->is<sf::Event::KeyPressed>() &&          \
+                    (event->getIf<sf::Event::KeyPressed>()          \
+                     -> code==sf::Keyboard::Key::Escape ||          \
+                     event->getIf<sf::Event::KeyPressed>()          \
+                     -> code==sf::Keyboard::Key::Q )))              \
+                window_.close();                                    \
+    } while(0)        
+
+#define U(x) std::make_unsigned_t<int>((x))
 
 class InkAnimator {
 public:
