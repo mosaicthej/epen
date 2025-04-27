@@ -46,9 +46,9 @@ target_include_directories(InkAnimation PRIVATE
 
 # Link SFML and OpenCV correctly
 target_link_libraries(InkAnimation PRIVATE
-    sfml-graphics
-    sfml-window
-    sfml-system
+    SFML::Graphics
+    SFML::Window
+    SFML::System
     ${OpenCV_LIBS}
 )
 
