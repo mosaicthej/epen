@@ -113,8 +113,8 @@ void InkAnimator::run() {
         while(const std::optional event = window_.pollEvent())
             CLOSE_SF_WIND_ON_CUE(window_);
 
-        animateInkFlow();
         window_.clear(sf::Color::White);
+        animateInkFlow();
         window_.draw(sprite_);
         window_.display();
     }
