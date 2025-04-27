@@ -3,7 +3,7 @@ set(CMAKE_CXX_COMPILER clang++)
 project(CMakeSFMLOpenCVProject LANGUAGES CXX)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-add_compile_options(-Wall -Wextra)
+add_compile_options(-Wall -Wextra -g)
 
 include(FetchContent)
 
