@@ -2,6 +2,8 @@
 #define __INK_ANIMATOR_H__
 #include <SFML/Graphics.hpp>
 #include "ImageProcessor.hpp"
+#include <opencv4/opencv2/imgproc.hpp>
+#include <opencv4/opencv2/core/mat.hpp>
 #include <queue>
 #include <set>
 #include <type_traits>
@@ -33,7 +35,8 @@ private:
     const ImageProcessor& processor_;
     int numInkwells_;
     sf::RenderWindow window_;
-    sf::Image canvas_;
+    /* sf::Image canvas_; */
+    cv::Mat canvasMat_;
     sf::Texture texture_;
     sf::Sprite sprite_;
 

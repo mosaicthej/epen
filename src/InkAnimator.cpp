@@ -1,39 +1,43 @@
 #include "InkAnimator.hpp"
+#include "ImageProcessor.hpp"
+#include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/Graphics/Sprite.hpp>
 #include <SFML/Graphics/Texture.hpp>
+#include <SFML/Window/VideoMode.hpp>
 #include <iostream>
+#include <opencv4/opencv2/core.hpp>
+#include <opencv4/opencv2/imgproc.hpp>
 #include <optional>
 #include <ostream>
 #include <random>
-#include <type_traits>
 
-InkAnimator::InkAnimator(const ImageProcessor& processor, int numInkwells)
-    : processor_(processor), numInkwells_(numInkwells),
-      window_(sf::VideoMode({
-                  std::make_unsigned_t<int>(processor.getBinaryImage().cols), 
-                  std::make_unsigned_t<int>(processor.getBinaryImage().rows)}),
-                  "Ink Animation"),
-      texture_(),
-      sprite_(texture_) /* use a default texture to init */
-
+InkAnimator::InkAnimator(const ImageProcessor& proc, int nInkWells)
+    : processor_(proc), numInkwells_(nInkWells),
+    window_(sf::VideoMode(
+                {U(proc.getBinaryImage().cols),
+U(proc.getBinaryImage().rows)}, 32), "Ink Animation"),
+   sprite_(texture_)   /* placeholder */
 {
-    canvas_.resize({
-                  std::make_unsigned_t<int>(processor.getBinaryImage().cols), 
-                  std::make_unsigned_t<int>(processor.getBinaryImage().rows)},
-                  sf::Color::White);
-    if(!texture_.resize({
-            std::make_unsigned_t<int>(canvas_.getSize().x), 
-            std::make_unsigned_t<int>(canvas_.getSize().y)}))
-        std::cerr << "Failed to resize texture" << std::endl;
-    sprite_.setTexture(texture_);
+    unsigned int w { U(proc.getBinaryImage().cols) }, 
+                 h { U(proc.getBinaryImage().rows) };
+
+    /* cv::cvtColor(proc.getBinaryImage(), canvasMat_, cv::COLOR_GRAY2RGBA); */
+    canvasMat_ = cv::Mat(h, w, CV_8UC4, cv::Scalar(255,255,255,255));
+    /* canvasMat_ being rgba of all white */
+    texture_.resize({w, h});
+    /* sprite_.setTexture(texture_, true); */
+
     initializeInkWells();
 
-#ifdef DEBUG
-    /* testing rendering */
-    canvas_.setPixel({10,10}, sf::Color::Red);
-    texture_.update(canvas_);
-#endif
-    
+    auto& testred = canvasMat_.at<cv::Vec4b>({15u, 15u});
+    testred[0] = 0; testred[1] = 255; testred[2] = 0; testred[3] = 255;
+    /* BGRA */
+
+    if(!texture_.resize({w,h}))
+        std::cerr << "Unable to resize texture_!" << std::endl;
+    texture_.update(canvasMat_.ptr()); /* update the texture */
+
+    sprite_.setTexture(texture_, true);
 }
 
 void InkAnimator::initializeInkWells() {
@@ -74,9 +78,14 @@ void InkAnimator::animateInkFlow() {
         InkFront current = activeFronts_.front();
         activeFronts_.pop();
 
-        canvas_.setPixel({
-                std::make_unsigned_t<int>(current.position.x),
-                std::make_unsigned_t<int>(current.position.y)}, inkColor_);
+/*        canvasMat_.setPixel({U(current.position.x),U(current.position.y)}, 
+                inkColor_); */
+        auto& px = canvasMat_.at<cv::Vec4b>(current.position.y, current.position.x);
+        px[0] = 0;   // B
+        px[1] = 0;   // G
+        px[2] = 0;   // R
+        px[3] = 255; // A
+
 
         for (int d = 0; d < 4; ++d) {
             int nx = current.position.x + dx[d];
@@ -96,22 +105,15 @@ void InkAnimator::animateInkFlow() {
             anic++ << ':' << activeFronts_.size() << std::endl;
 #endif
     }
-        texture_.update(canvas_);
+    texture_.update(canvasMat_.ptr());
 }
 
 void InkAnimator::run() {
     while (window_.isOpen()) {
         while(const std::optional event = window_.pollEvent())
-            if (event->is<sf::Event::Closed>() ||
-                    (event->is<sf::Event::KeyPressed>() &&
-                    (event->getIf<sf::Event::KeyPressed>()
-                     -> code==sf::Keyboard::Key::Escape || 
-                     event->getIf<sf::Event::KeyPressed>() 
-                     -> code==sf::Keyboard::Key::Q )))
-                window_.close();
+            CLOSE_SF_WIND_ON_CUE(window_);
 
         animateInkFlow();
-
         window_.clear(sf::Color::White);
         window_.draw(sprite_);
         window_.display();
