@@ -13,7 +13,10 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    int numInkwells = 10;  // Customize number of ink wells as needed
+    int numInkwells = 3;  // Customize number of ink wells as needed
+    if (argc > 2)
+        numInkwells = std::stoi(argv[2]);
+
     InkAnimator animator(processor, numInkwells);
 
     animator.run();
