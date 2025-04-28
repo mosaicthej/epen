@@ -33,11 +33,12 @@ private:
     struct InkFront { sf::Vector2i position; int label; };
 
     void initializeInkWells();
-    void spawnInkWell();
+    bool spawnInkWell();
     void animateInkFlow(uint stepsPerFrame);
 
     const ImageProcessor& processor_;
-    int numInkwells_;
+    uint numInkwells_;
+    bool hasremain_;
     sf::RenderWindow window_;
 
     // Our RGBA canvas as an OpenCV Mat  

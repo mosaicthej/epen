@@ -12,12 +12,12 @@
 #include <random>
 
 InkAnimator::InkAnimator(const ImageProcessor& proc, int nInkWells)
-    : processor_(proc), numInkwells_(nInkWells),
-    window_(sf::VideoMode(
+    :   processor_(proc), numInkwells_(nInkWells), hasremain_(true),
+        window_(sf::VideoMode(
                 {U(proc.getBinaryImage().cols),
-U(proc.getBinaryImage().rows)}, 32), "Ink Animation"),
-   sprite_(texture_),   /* placeholder */
-   rng_(std::random_device{}())
+                 U(proc.getBinaryImage().rows)}, 32), "Ink Animation"),
+        sprite_(texture_),   /* placeholder */
+        rng_(std::random_device{}())
 {
     unsigned int w { U(proc.getBinaryImage().cols) }, 
                  h { U(proc.getBinaryImage().rows) };
@@ -48,7 +48,7 @@ void InkAnimator::initializeInkWells() {
     std::cout << "Initializing inkwells..." << std::endl;
 #endif
     
-    for (int i = 0; i < numInkwells_; ++i) {
+    for (uint i = 0; i < numInkwells_; ++i) {
         auto& comp = components[i % components.size()];
 
         std::uniform_int_distribution<> dx(comp.bbox.x, 
@@ -74,8 +74,10 @@ void InkAnimator::initializeInkWells() {
 
 }
 
-/* spawn new inkwell on random incomplete cc */
-void InkAnimator::spawnInkWell() {
+/* spawn new inkwell on random incomplete cc 
+ *  if can't find, return false.
+ * */
+bool InkAnimator::spawnInkWell() {
 #ifdef DEBUG
     std::cout << "spawning new..." << std::endl;
 #endif
@@ -86,7 +88,7 @@ void InkAnimator::spawnInkWell() {
         if (!completedComponents_.count(lbl))
             cand.push_back(lbl);
 
-    if (cand.empty()) return; /* all done */
+    if (cand.empty()) return false; /* all done */
 
     std::uniform_int_distribution<> pick(0, cand.size()-1);
     int label = cand[pick(rng_)];
@@ -116,6 +118,7 @@ void InkAnimator::spawnInkWell() {
               << " now filled=" << filledCount_[label]
               << "/" << componentAreas_[label] << "\n";
 #endif
+    return true; /* succeed */
 }
 
 void InkAnimator::animateInkFlow(uint stepsPerFrame) {
@@ -137,22 +140,19 @@ void InkAnimator::animateInkFlow(uint stepsPerFrame) {
             << filledCount_[cur.label] << '/' << componentAreas_[cur.label]
             << std::endl;
 #endif
-        if (activeFronts_.empty()) spawnInkWell(); /* spawn when queue empty */
+        if (activeFronts_.empty()){
+            hasremain_ = spawnInkWell(); /* allocate new one */
+#ifdef DEBUG
+            std::cout << "done." << std::endl;
+#endif
+        }
+         /* spawn when queue empty */
         if (cnt == componentAreas_[cur.label]) {
 #ifdef DEBUG
             std::cout << "completed cc #" << cur.label << '\n';
 #endif
             completedComponents_.insert(cur.label);
-            spawnInkWell();
         }
-
-        /* 
-        InkFront current = activeFronts_.front();
-        activeFronts_.pop();
-
-        canvasMat_.setPixel({U(current.position.x),U(current.position.y)}, 
-                inkColor_); */
-
         /* spread to 4 neighbours */
         for (int d = 0; d < 4; ++d) {
             int nx = cur.position.x + dx[d];
@@ -173,7 +173,8 @@ void InkAnimator::run(uint stepsPerFrame) {
         CLOSE_SF_WIND_ON_CUE(window_);
 
         window_.clear(sf::Color::White);
-        animateInkFlow(stepsPerFrame);
+        if (hasremain_) animateInkFlow(stepsPerFrame);
+        /* animate only when there's activeInkWells_ */
         window_.draw(sprite_);
         window_.display();
     }
