@@ -5,49 +5,59 @@
 #include <opencv4/opencv2/imgproc.hpp>
 #include <opencv4/opencv2/core/mat.hpp>
 #include <queue>
+#include <random>
 #include <set>
 #include <type_traits>
 
 #define CLOSE_SF_WIND_ON_CUE(w) \
     do{ \
-        while(const std::optional event = window_.pollEvent())      \
+        while(const std::optional event = w.pollEvent())      \
             if (event->is<sf::Event::Closed>() ||                   \
                     (event->is<sf::Event::KeyPressed>() &&          \
                     (event->getIf<sf::Event::KeyPressed>()          \
                      -> code==sf::Keyboard::Key::Escape ||          \
                      event->getIf<sf::Event::KeyPressed>()          \
                      -> code==sf::Keyboard::Key::Q )))              \
-                window_.close();                                    \
+                w.close();                                    \
     } while(0)        
 
 #define U(x) std::make_unsigned_t<int>((x))
 
+
 class InkAnimator {
 public:
     InkAnimator(const ImageProcessor& processor, int numInkwells);
-
     void run();
 
 private:
+    struct InkFront { sf::Vector2i position; int label; };
+
     void initializeInkWells();
+    void spawnInkWell();
     void animateInkFlow();
 
     const ImageProcessor& processor_;
     int numInkwells_;
     sf::RenderWindow window_;
-    /* sf::Image canvas_; */
-    cv::Mat canvasMat_;
-    sf::Texture texture_;
-    sf::Sprite sprite_;
 
-    struct InkFront {
-        sf::Vector2i position;
-        int label;
-    };
+    // Our RGBA canvas as an OpenCV Mat  
+    cv::Mat        canvasMat_;
+    sf::Texture    texture_;
+    sf::Sprite     sprite_;
+
     std::queue<InkFront> activeFronts_;
-    std::set<std::pair<int, int>> filledPixels_;
+    std::set<std::pair<int,int>> filledPixels_;
+
+    // —— NEW MEMBERS for respawning logic —— 
+    std::unordered_map<int,int> componentAreas_;   
+    // label -> total pixels
+    std::unordered_map<int,int> filledCount_;      
+    // label -> pixels filled so far
+    std::set<int>               completedComponents_;
+    std::mt19937                rng_;
 
     sf::Color inkColor_ = sf::Color::Black;
 };
+
 
 #endif
