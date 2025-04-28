@@ -29,16 +29,13 @@ U(proc.getBinaryImage().rows)}, 32), "Ink Animation"),
     if(!texture_.resize({w,h}))
         std::cerr << "Unable to resize texture_!" << std::endl;
     texture_.update(canvasMat_.ptr()); /* update the texture */
-
     sprite_.setTexture(texture_, true);
 
-    
     /* build components area map */
     for (auto& comp : proc.getComponents()) {
         componentAreas_[comp.label] = comp.area;
         filledCount_[comp.label]  = 0;
     }
-
 
     initializeInkWells();
 }
@@ -121,13 +118,11 @@ void InkAnimator::spawnInkWell() {
 #endif
 }
 
-void InkAnimator::animateInkFlow() {
+void InkAnimator::animateInkFlow(uint stepsPerFrame) {
     const cv::Mat& labels = processor_.getLabelImage();
     static constexpr int dx[] = {-1, 1, 0, 0}, dy[] = {0, 0, -1, 1};
 
-    int stepsPerFrame = 10;  // speed of ink spreading
-
-    for (int step = 0; step < stepsPerFrame && !activeFronts_.empty(); ++step) {
+    for (uint step = 0; step < stepsPerFrame && !activeFronts_.empty(); ++step) {
         auto cur = activeFronts_.front();
         activeFronts_.pop();
 
@@ -142,7 +137,7 @@ void InkAnimator::animateInkFlow() {
             << filledCount_[cur.label] << '/' << componentAreas_[cur.label]
             << std::endl;
 #endif
-        if (activeFronts_.empty()) spawnInkWell();
+        if (activeFronts_.empty()) spawnInkWell(); /* spawn when queue empty */
         if (cnt == componentAreas_[cur.label]) {
 #ifdef DEBUG
             std::cout << "completed cc #" << cur.label << '\n';
@@ -152,8 +147,6 @@ void InkAnimator::animateInkFlow() {
         }
 
         /* 
-
-
         InkFront current = activeFronts_.front();
         activeFronts_.pop();
 
@@ -175,14 +168,13 @@ void InkAnimator::animateInkFlow() {
     texture_.update(canvasMat_.ptr());
 }
 
-void InkAnimator::run() {
+void InkAnimator::run(uint stepsPerFrame) {
     while (window_.isOpen()) {
         CLOSE_SF_WIND_ON_CUE(window_);
 
         window_.clear(sf::Color::White);
-        animateInkFlow();
+        animateInkFlow(stepsPerFrame);
         window_.draw(sprite_);
         window_.display();
     }
 }
-

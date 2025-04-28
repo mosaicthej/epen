@@ -27,14 +27,14 @@
 class InkAnimator {
 public:
     InkAnimator(const ImageProcessor& processor, int numInkwells);
-    void run();
+    void run(uint stepsPerFrame);
 
 private:
     struct InkFront { sf::Vector2i position; int label; };
 
     void initializeInkWells();
     void spawnInkWell();
-    void animateInkFlow();
+    void animateInkFlow(uint stepsPerFrame);
 
     const ImageProcessor& processor_;
     int numInkwells_;

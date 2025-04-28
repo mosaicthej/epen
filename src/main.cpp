@@ -19,7 +19,9 @@ int main(int argc, char** argv) {
 
     InkAnimator animator(processor, numInkwells);
 
-    animator.run();
+    uint stepsPerFrame = 10;
+    if (argc > 3) stepsPerFrame = std::stoi(argv[3]);
+    animator.run(stepsPerFrame);
 
     return 0;
 }
