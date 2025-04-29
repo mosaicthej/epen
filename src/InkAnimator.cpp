@@ -12,7 +12,8 @@
 #include <random>
 
 InkAnimator::InkAnimator(const ImageProcessor& proc, int nInkWells)
-    :   processor_(proc), numInkwells_(nInkWells), hasremain_(true),
+    :   processor_(proc), numInkwells_(nInkWells), 
+        hasremain_(true), paused_(false),
         window_(sf::VideoMode(
                 {U(proc.getBinaryImage().cols),
                  U(proc.getBinaryImage().rows)}, 32), "Ink Animation"),
@@ -173,7 +174,7 @@ void InkAnimator::run(uint stepsPerFrame) {
         CLOSE_SF_WIND_ON_CUE(window_);
 
         window_.clear(sf::Color::White);
-        if (hasremain_) animateInkFlow(stepsPerFrame);
+        if (hasremain_ && !paused_) animateInkFlow(stepsPerFrame);
         /* animate only when there's activeInkWells_ */
         window_.draw(sprite_);
         window_.display();

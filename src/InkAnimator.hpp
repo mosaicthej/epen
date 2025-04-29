@@ -11,15 +11,19 @@
 
 #define CLOSE_SF_WIND_ON_CUE(w) \
     do{ \
-        while(const std::optional event = w.pollEvent())      \
+        while(const std::optional event = w.pollEvent())            \
             if (event->is<sf::Event::Closed>() ||                   \
                     (event->is<sf::Event::KeyPressed>() &&          \
                     (event->getIf<sf::Event::KeyPressed>()          \
                      -> code==sf::Keyboard::Key::Escape ||          \
                      event->getIf<sf::Event::KeyPressed>()          \
                      -> code==sf::Keyboard::Key::Q )))              \
-                w.close();                                    \
-    } while(0)        
+                w.close();                                          \
+            else if (event->is<sf::Event::KeyPressed>() &&          \
+                    (event->getIf<sf::Event::KeyPressed>()          \
+                     -> code==sf::Keyboard::Key::P))                \
+                paused_ = !paused_;                                 \
+        } while(0)        
 
 #define U(x) std::make_unsigned_t<int>((x))
 
@@ -39,6 +43,7 @@ private:
     const ImageProcessor& processor_;
     uint numInkwells_;
     bool hasremain_;
+    bool paused_;
     sf::RenderWindow window_;
 
     // Our RGBA canvas as an OpenCV Mat  
