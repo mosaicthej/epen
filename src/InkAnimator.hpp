@@ -2,11 +2,14 @@
 #define __INK_ANIMATOR_H__
 #include <SFML/Graphics.hpp>
 #include "ImageProcessor.hpp"
+#include <array>
 #include <opencv4/opencv2/imgproc.hpp>
 #include <opencv4/opencv2/core/mat.hpp>
 #include <queue>
 #include <random>
 #include <set>
+#include <string>
+#include <sys/types.h>
 #include <type_traits>
 
 #define CLOSE_SF_WIND_ON_CUE(w) \
@@ -39,6 +42,7 @@ private:
     void initializeInkWells();
     bool spawnInkWell();
     void animateInkFlow(uint stepsPerFrame);
+    std::array<uint, 4> hexToRgba(const std::string& hex);
 
     const ImageProcessor& processor_;
     uint numInkwells_;
@@ -62,7 +66,8 @@ private:
     std::set<int>               completedComponents_;
     std::mt19937                rng_;
 
-    sf::Color inkColor_ = sf::Color::Black;
+    // const std::string&          inkhex_;
+    // std::array<uint, 4>         inkrgba_;
 };
 
 
