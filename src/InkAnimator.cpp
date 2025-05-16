@@ -132,7 +132,7 @@ void InkAnimator::animateInkFlow(uint stepsPerFrame) {
 
         /* paint */
         auto& px = canvasMat_.at<cv::Vec4b>(cur.position.y, cur.position.x);
-        px = {0,0,0,255};
+        px = {97,97,97,255};
 
         /* record fill count and check completion */
         int cnt = ++filledCount_[cur.label];
